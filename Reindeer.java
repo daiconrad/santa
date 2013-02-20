@@ -14,9 +14,7 @@ public class Reindeer extends Creature implements Comparable<Reindeer> {
 	}
 
 	@Override public void queueUp() {
-		synchronized (queue) {
-			queue.add(this);
-		}
+		queue.add(this);
 	}
 
 	@Override public int compareTo(Reindeer that) {

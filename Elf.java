@@ -14,9 +14,7 @@ public class Elf extends Creature implements Comparable<Elf> {
 	}
 
 	@Override public void queueUp() {
-		synchronized (queue) {
-			queue.add(this);
-		}
+		queue.add(this);
 	}
 
 	@Override public int compareTo(Elf that) {

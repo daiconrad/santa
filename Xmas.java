@@ -21,11 +21,8 @@ public class Xmas {
 		List<Reindeer> reindeer = new ArrayList<Reindeer>();
 		for (int i = 1; i <= REINDEER; ++i) reindeer.add(new Reindeer(i, reindeerQueue));
 
-		Supervisor supervisor = new Supervisor(santa, elves, reindeer);
-
 		new Thread(santa).start();
 		for (Reindeer r : reindeer) new Thread(r).start();
 		for (Elf elf : elves) new Thread(elf).start();
-		new Thread(supervisor).start();
 	}
 }
