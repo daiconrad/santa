@@ -1,11 +1,13 @@
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.CyclicBarrier;
 
 public class Elf extends Creature implements Comparable<Elf> {
-	private final NotifyQueue<Elf> queue;
+	private final Queue<Elf> queue;
 	private final Random random = new Random();
 
-	public Elf(int id, NotifyQueue<Elf> queue) {
-		super(id, "Elf");
+	public Elf(int id, Queue<Elf> queue, CyclicBarrier barrier) {
+		super(id, "Elf", barrier);
 		this.queue = queue;
 	}
 

@@ -1,11 +1,13 @@
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.CyclicBarrier;
 
 public class Reindeer extends Creature implements Comparable<Reindeer> {
-	private final NotifyQueue<Reindeer> queue;
+	private final Queue<Reindeer> queue;
 	private final Random random = new Random();
 
-	public Reindeer(int id, NotifyQueue<Reindeer> queue) {
-		super(id, "Reindeer");
+	public Reindeer(int id, Queue<Reindeer> queue, CyclicBarrier barrier) {
+		super(id, "Reindeer", barrier);
 		this.queue = queue;
 	}
 
