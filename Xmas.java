@@ -5,6 +5,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Xmas implements Runnable {
+	public static final int SANTA = 1;
 	public static final int ELVES = 10;
 	public static final int MIN_ELVES = 3;
 	public static final int REINDEER = 9;
@@ -18,7 +19,10 @@ public class Xmas implements Runnable {
 		Queue<Elf> elfQueue = new LinkedBlockingQueue<Elf>();
 		Queue<Reindeer> reindeerQueue = new LinkedBlockingQueue<Reindeer>();
 
-		Santa santa = new Santa(elfQueue, reindeerQueue);
+		CyclicBarrier meetingBarrier = new CyclicBarrier(MIN_ELVES + SANTA);
+		CyclicBarrier deliveryBarrier = new CyclicBarrier(MIN_REINDEER + SANTA);
+
+		Santa santa = new Santa(elfQueue, reindeerQueue, meetingBarrier, deliveryBarrier);
 		Xmas wakeSanta = new Xmas(santa);
 
 		CyclicBarrier elfBarrier = new CyclicBarrier(MIN_ELVES, wakeSanta);
@@ -26,11 +30,11 @@ public class Xmas implements Runnable {
 
 		List<Elf> elves = new ArrayList<Elf>();
 		for (int i = 1; i <= ELVES; ++i) {
-			elves.add(new Elf(i, elfQueue, elfBarrier));
+			elves.add(new Elf(i, elfQueue, elfBarrier, meetingBarrier));
 		}
 		List<Reindeer> reindeer = new ArrayList<Reindeer>();
 		for (int i = 1; i <= REINDEER; ++i) {
-			reindeer.add(new Reindeer(i, reindeerQueue, reindeerBarrier));
+			reindeer.add(new Reindeer(i, reindeerQueue, reindeerBarrier, deliveryBarrier));
 		}
 
 		new Thread(santa).start();
