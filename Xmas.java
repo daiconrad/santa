@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 public class Xmas implements Runnable {
 	public static final int SANTA = 1;
@@ -11,38 +12,44 @@ public class Xmas implements Runnable {
 	public static final int REINDEER = 9;
 	public static final int MIN_REINDEER = REINDEER;
 
-	private final Santa santa;
+	private final Semaphore door;
 
-	public Xmas(Santa santa) { this.santa = santa; }
+	public Xmas(Semaphore door) { this.door = door; }
+
+	@Override public void run() {
+		door.release();
+	}
 
 	public static void main(String[] args) {
+		Semaphore door = new Semaphore(0);
+		Xmas wakeSanta = new Xmas(door);
+
+		Semaphore invite = new Semaphore(0);
+		Semaphore harness = new Semaphore(0);
+
 		Queue<Elf> elfQueue = new LinkedBlockingQueue<Elf>();
-		Queue<Reindeer> reindeerQueue = new LinkedBlockingQueue<Reindeer>();
+		Queue<Reindeer> deerQueue = new LinkedBlockingQueue<Reindeer>();
 
-		CyclicBarrier meetingBarrier = new CyclicBarrier(MIN_ELVES + SANTA);
-		CyclicBarrier deliveryBarrier = new CyclicBarrier(MIN_REINDEER + SANTA);
+		CyclicBarrier elfWait = new CyclicBarrier(MIN_ELVES, wakeSanta);
+		CyclicBarrier deerWait = new CyclicBarrier(MIN_REINDEER, wakeSanta);
 
-		Santa santa = new Santa(elfQueue, reindeerQueue, meetingBarrier, deliveryBarrier);
-		Xmas wakeSanta = new Xmas(santa);
+		CyclicBarrier meeting = new CyclicBarrier(MIN_ELVES + SANTA);
+		CyclicBarrier delivery = new CyclicBarrier(MIN_REINDEER + SANTA);
 
-		CyclicBarrier elfBarrier = new CyclicBarrier(MIN_ELVES, wakeSanta);
-		CyclicBarrier reindeerBarrier = new CyclicBarrier(MIN_REINDEER, wakeSanta);
+		Santa santa = new Santa(door, elfQueue, deerQueue,
+				meeting, delivery, invite, harness);
 
 		List<Elf> elves = new ArrayList<Elf>();
 		for (int i = 1; i <= ELVES; ++i) {
-			elves.add(new Elf(i, elfQueue, elfBarrier, meetingBarrier));
+			elves.add(new Elf(i, elfQueue, elfWait, meeting, invite));
 		}
 		List<Reindeer> reindeer = new ArrayList<Reindeer>();
 		for (int i = 1; i <= REINDEER; ++i) {
-			reindeer.add(new Reindeer(i, reindeerQueue, reindeerBarrier, deliveryBarrier));
+			reindeer.add(new Reindeer(i, deerQueue, deerWait, delivery, harness));
 		}
 
-		new Thread(santa).start();
-		for (Reindeer deer : reindeer) new Thread(deer).start();
-		for (Elf elf : elves) new Thread(elf).start();
-	}
-
-	@Override public void run() {
-		synchronized (santa) { santa.notify(); }
+		new Thread(santa, santa.toString()).start();
+		for (Reindeer deer : reindeer) new Thread(deer, deer.toString()).start();
+		for (Elf elf : elves) new Thread(elf, elf.toString()).start();
 	}
 }

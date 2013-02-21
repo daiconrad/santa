@@ -1,13 +1,15 @@
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Semaphore;
 
-public class Reindeer extends Creature implements Comparable<Reindeer> {
+public class Reindeer extends Creature {
 	private final Queue<Reindeer> queue;
 	private final Random random = new Random();
 
-	public Reindeer(int id, Queue<Reindeer> queue, CyclicBarrier line, CyclicBarrier hold) {
-		super(id, "Reindeer", "relax", line, hold);
+	public Reindeer(int id, Queue<Reindeer> queue,
+			CyclicBarrier line, CyclicBarrier hold, Semaphore harness) {
+		super(id, "Reindeer", "relax", line, hold, harness);
 		this.queue = queue;
 	}
 
@@ -17,9 +19,5 @@ public class Reindeer extends Creature implements Comparable<Reindeer> {
 
 	@Override public void queueUp() {
 		queue.add(this);
-	}
-
-	@Override public int compareTo(Reindeer that) {
-		return this.id - that.id;
 	}
 }
