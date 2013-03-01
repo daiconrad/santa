@@ -8,8 +8,8 @@ public class Elf extends Creature {
 	private final Random random = new Random();
 
 	public Elf(int id, Queue<Elf> queue,
-			CyclicBarrier line, CyclicBarrier hold, Semaphore invite) {
-		super(id, "Elf", "work", line, hold, invite);
+			CyclicBarrier line, Semaphore invite) {
+		super(id, "Elf", "work", line, invite);
 		this.queue = queue;
 	}
 

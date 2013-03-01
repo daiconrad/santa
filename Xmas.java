@@ -33,19 +33,15 @@ public class Xmas implements Runnable {
 		CyclicBarrier elfWait = new CyclicBarrier(MIN_ELVES, wakeSanta);
 		CyclicBarrier deerWait = new CyclicBarrier(MIN_REINDEER, wakeSanta);
 
-		CyclicBarrier meeting = new CyclicBarrier(MIN_ELVES + SANTA);
-		CyclicBarrier delivery = new CyclicBarrier(MIN_REINDEER + SANTA);
-
-		Santa santa = new Santa(door, elfQueue, deerQueue,
-				meeting, delivery, invite, harness);
+		Santa santa = new Santa(door, elfQueue, deerQueue, invite, harness);
 
 		List<Elf> elves = new ArrayList<Elf>();
 		for (int i = 1; i <= ELVES; ++i) {
-			elves.add(new Elf(i, elfQueue, elfWait, meeting, invite));
+			elves.add(new Elf(i, elfQueue, elfWait, invite));
 		}
 		List<Reindeer> reindeer = new ArrayList<Reindeer>();
 		for (int i = 1; i <= REINDEER; ++i) {
-			reindeer.add(new Reindeer(i, deerQueue, deerWait, delivery, harness));
+			reindeer.add(new Reindeer(i, deerQueue, deerWait, harness));
 		}
 
 		new Thread(santa, santa.toString()).start();

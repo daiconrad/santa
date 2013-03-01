@@ -8,8 +8,8 @@ public class Reindeer extends Creature {
 	private final Random random = new Random();
 
 	public Reindeer(int id, Queue<Reindeer> queue,
-			CyclicBarrier line, CyclicBarrier hold, Semaphore harness) {
-		super(id, "Reindeer", "relax", line, hold, harness);
+			CyclicBarrier line, Semaphore harness) {
+		super(id, "Reindeer", "relax", line, harness);
 		this.queue = queue;
 	}
 

@@ -13,14 +13,11 @@ public class Santa implements Runnable {
 	private final Semaphore door, invite, harness;
 	private final Queue<Elf> elves;
 	private final Queue<Reindeer> reindeer;
-	private final CyclicBarrier meeting, delivery;
 	
 	public Santa(Semaphore door, Queue<Elf> elves, Queue<Reindeer> reindeer,
-			CyclicBarrier meeting, CyclicBarrier delivery,
 			Semaphore invite, Semaphore harness) {
 		this.door = door;
 		this.elves = elves; this.reindeer = reindeer;
-		this.meeting = meeting; this.delivery = delivery;
 		this.invite = invite; this.harness = harness;
 	}
 
@@ -57,15 +54,15 @@ public class Santa implements Runnable {
 	}
 
 	private void deliverPresents() throws InterruptedException, BrokenBarrierException {
-		process(reindeer, Xmas.MIN_REINDEER, DELIVER, delivery, harness);
+		process(reindeer, Xmas.MIN_REINDEER, DELIVER, harness);
 	}
 
 	private void holdMeeting() throws InterruptedException, BrokenBarrierException {
-		process(elves, Xmas.MIN_ELVES, MEET, meeting, invite);
+		process(elves, Xmas.MIN_ELVES, MEET, invite);
 	}
 
-	private void process(Queue<? extends Creature> queue, int count,
-			String action, CyclicBarrier finished, Semaphore wait)
+	private void process(Queue<? extends Creature> queue,
+			int count, String action, Semaphore wait)
 				throws InterruptedException, BrokenBarrierException {
 		final List<Creature> list = new ArrayList<Creature>();
 		for (int i = 0; i < count; ++i) {
@@ -77,12 +74,8 @@ public class Santa implements Runnable {
 		System.out.println(Util.join(list) + ", and " + this + " " + action);
 		Thread.sleep(5);
 
-		int waiting = finished.getNumberWaiting();
-		if (waiting == count) {
-			System.out.println("Ho! Ho! Ho! All finished!");
-		} else {
-			System.out.printf("And yet, only %d of %d are waiting...%n", waiting, count);
-		}
-		finished.await(); // tell them to go back to whatever they were doing
+		System.out.println("Ho! Ho! Ho! All finished!");
+		// tell them to go back to whatever they were doing
+		for (Creature c : list) { c.grantLeave(); }
 	}
 }
