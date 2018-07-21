@@ -1,16 +1,20 @@
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.TransferQueue;
 
-public class Doorman<T> implements Runnable {
-	private final TransferQueue<T> sourceQueue;
-	private final Queue<T> sinkQueue;
+public class Doorman<C extends Creature> implements Runnable {
+	private final TransferQueue<C> sourceQueue;
+	private final Queue<List<? extends Creature>> sinkQueue;
     private final Runnable action;
     private final String name;
     private final int count;
 
-	public Doorman(int count, String name, TransferQueue<T> sourceQueue, Queue<T> sinkQueue, Runnable action) {
+	public Doorman(int count, String name, TransferQueue<C> sourceQueue,
+            Queue<List<? extends Creature>> sinkQueue, Runnable action) {
         this.count = requirePositive(count);
         this.name = requireNonNull(name);
 		this.sourceQueue = requireNonNull(sourceQueue);
@@ -25,20 +29,19 @@ public class Doorman<T> implements Runnable {
 
 	@Override
     public void run() {
+        List<C> list;
         try {
+            list = new ArrayList<>();
             while (true) {
-                T individual = sourceQueue.take();
-                System.out.format("%s welcomes %s to Santa's study%n", this, individual);
-                sinkQueue.add(individual);
-                if (sinkQueue.size() == count) {
-                    System.out.format("%s wakes up Santa%n", this, individual);
+                C creature = sourceQueue.take();
+                System.out.format("%s welcomes %s to Santa's study%n", name, creature);
+                list.add(creature);
+                if (list.size() == count) {
+                    Collections.sort(list);
+                    sinkQueue.add(list);
+                    list = new ArrayList<>();
+                    System.out.format("%s wakes up Santa%n", name);
                     action.run();
-                    System.out.format("%s waits for the queue to empty%n", this, individual);
-                    while (!sinkQueue.isEmpty()) {
-                        if (Thread.interrupted()) break;
-                        Thread.onSpinWait();
-                    }
-                    System.out.format("%s is ready to accept%n", this, individual);
                 }
             }
         } catch (InterruptedException e) {

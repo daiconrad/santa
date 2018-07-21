@@ -1,3 +1,5 @@
+import static java.util.Objects.requireNonNull;
+
 import java.util.concurrent.Semaphore;
 
 public abstract class Creature implements Runnable, Comparable<Creature> {
@@ -8,15 +10,17 @@ public abstract class Creature implements Runnable, Comparable<Creature> {
 
 	public Creature(int id, String name, String act) {
 		this.id = id;
-		this.name = name;
-		this.act = act;
+		this.name = requireNonNull(name);
+		this.act = requireNonNull(act);
 		leave = new Semaphore(0);
 		waiting = new Semaphore(0);
 	}
 
 	public abstract void queueUp() throws InterruptedException;
 
-	public abstract int time();
+	public abstract int time(); // time between visits to Santa (ms)
+
+    public abstract String getReason(); // reason for wanting to see Santa
 
     public void welcomeIn() {
         waiting.release();

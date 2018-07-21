@@ -23,29 +23,29 @@ public class Xmas {
         int time = args.length == 0? 20_000 : Integer.parseInt(args[0].replace(",", "").replace("_", ""));
 		Semaphore door = new Semaphore(0);
 
-		Queue<Elf> elfQueue = new ConcurrentLinkedQueue<Elf>();
-		Queue<Reindeer> deerQueue = new ConcurrentLinkedQueue<Reindeer>();
-		TransferQueue<Elf> elfTransferQueue = new LinkedTransferQueue<Elf>();
-		TransferQueue<Reindeer> deerTransferQueue = new LinkedTransferQueue<Reindeer>();
+		Queue<List<? extends Creature>> santaQueue = new ConcurrentLinkedQueue<>();
+
+		TransferQueue<Elf> elfQueue = new LinkedTransferQueue<Elf>();
+		TransferQueue<Reindeer> deerQueue = new LinkedTransferQueue<Reindeer>();
 
         System.out.println("It's the most wonderul time of the year...");
-		Santa santa = new Santa(door, elfQueue, deerQueue);
+		Santa santa = new Santa(door, santaQueue);
 		remember(new Thread(santa, santa.toString())).start();
 
         var reginald = new Doorman<Reindeer>(MIN_REINDEER,
-                "Reginald", deerTransferQueue, deerQueue, () -> door.release());
+                "Reginald", deerQueue, santaQueue, () -> door.release());
         remember(new Thread(reginald, reginald.toString())).start();
 
         var alfred = new Doorman<Elf>(MIN_ELVES,
-                "Alfred", elfTransferQueue, elfQueue, () -> door.release());
+                "Alfred", elfQueue, santaQueue, () -> door.release());
         remember(new Thread(alfred, alfred.toString())).start();
 
 		for (int i = 1; i <= REINDEER; ++i) {
-			Reindeer deer = new Reindeer(i, deerTransferQueue);
+			Reindeer deer = new Reindeer(i, deerQueue);
 			remember(new Thread(deer, deer.toString())).start();
 		}
 		for (int i = 1; i <= ELVES; ++i) {
-			Elf elf = new Elf(i, elfTransferQueue);
+			Elf elf = new Elf(i, elfQueue);
 			remember(new Thread(elf, elf.toString())).start();
 		}
 

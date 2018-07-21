@@ -1,3 +1,5 @@
+import static java.util.Objects.requireNonNull;
+
 import java.util.Random;
 import java.util.concurrent.TransferQueue;
 
@@ -7,7 +9,7 @@ public class Elf extends Creature {
 
 	public Elf(int id, TransferQueue<Elf> queue) {
 		super(id, "Elf", "work");
-		this.queue = queue;
+		this.queue = requireNonNull(queue);
 	}
 
 	@Override public int time() {
@@ -18,4 +20,6 @@ public class Elf extends Creature {
         System.out.format("%s needs Santa's help...%n", this);
 		queue.transfer(this);
 	}
+
+    @Override public String getReason() { return Santa.MEET; }
 }
