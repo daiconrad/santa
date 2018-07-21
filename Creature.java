@@ -1,27 +1,26 @@
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 
 public abstract class Creature implements Runnable, Comparable<Creature> {
 	private final int id;
-	private final String name, action;
-	private final CyclicBarrier line;
+	private final String name, act;
 	private final Semaphore waiting;
 	private final Semaphore leave;
 
-	public Creature(int id, String name, String action,
-			CyclicBarrier line, Semaphore waiting) {
+	public Creature(int id, String name, String act) {
 		this.id = id;
 		this.name = name;
-		this.action = action;
-		this.line = line;
-		this.waiting = waiting;
+		this.act = act;
 		leave = new Semaphore(0);
+		waiting = new Semaphore(0);
 	}
 
-	public abstract void queueUp();
+	public abstract void queueUp() throws InterruptedException;
 
 	public abstract int time();
+
+    public void welcomeIn() {
+        waiting.release();
+    }
 
 	public void grantLeave() {
 		leave.release();
@@ -33,8 +32,12 @@ public abstract class Creature implements Runnable, Comparable<Creature> {
 
 	@Override public String toString() { return name + " " + id; }
 
+    public String getName() { return name; }
+
+    public int getId() { return id; }
+
 	private void actFor(int time) throws InterruptedException {
-		System.out.printf("%s is %sing%n", this, action);
+		System.out.printf("%s is %sing%n", this, act);
 		Thread.sleep(time); // simulate activity
 	}
 
@@ -42,14 +45,12 @@ public abstract class Creature implements Runnable, Comparable<Creature> {
 		try {
 			while (true) {
 				actFor(time());
-				queueUp();
-				line.await(); // get in line for Santa
+				queueUp(); // get in line for Santa
 				waiting.acquire(); // wait to be brought in by Santa
 				leave.acquire(); // wait for Santa to dismiss us
 			}
-		} catch (InterruptedException|BrokenBarrierException e) {
-			System.out.println(this + " " + e.getClass().getSimpleName());
-			Thread.currentThread().interrupt();
+		} catch (InterruptedException e) {
+            System.out.format("%s is done%n", this);
 		}
 	}
 }

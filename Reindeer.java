@@ -1,15 +1,12 @@
-import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TransferQueue;
 
 public class Reindeer extends Creature {
-	private final Queue<Reindeer> queue;
+	private final TransferQueue<Reindeer> queue;
 	private final Random random = new Random();
 
-	public Reindeer(int id, Queue<Reindeer> queue,
-			CyclicBarrier line, Semaphore harness) {
-		super(id, "Reindeer", "relax", line, harness);
+	public Reindeer(int id, TransferQueue<Reindeer> queue) {
+		super(id, "Reindeer", "relax");
 		this.queue = queue;
 	}
 
@@ -17,7 +14,8 @@ public class Reindeer extends Creature {
 		return 3650 + (random.nextInt(10) + 1);
 	}
 
-	@Override public void queueUp() {
-		queue.add(this);
+	@Override public void queueUp() throws InterruptedException {
+        System.out.format("%s has returned from vacation...%n", this);
+		queue.transfer(this);
 	}
 }

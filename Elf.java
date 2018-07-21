@@ -1,15 +1,12 @@
-import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TransferQueue;
 
 public class Elf extends Creature {
-	private final Queue<Elf> queue;
+	private final TransferQueue<Elf> queue;
 	private final Random random = new Random();
 
-	public Elf(int id, Queue<Elf> queue,
-			CyclicBarrier line, Semaphore invite) {
-		super(id, "Elf", "work", line, invite);
+	public Elf(int id, TransferQueue<Elf> queue) {
+		super(id, "Elf", "work");
 		this.queue = queue;
 	}
 
@@ -17,7 +14,8 @@ public class Elf extends Creature {
 		return (random.nextInt(14) + 1) * 10;
 	}
 
-	@Override public void queueUp() {
-		queue.add(this);
+	@Override public void queueUp() throws InterruptedException {
+        System.out.format("%s needs Santa's help...%n", this);
+		queue.transfer(this);
 	}
 }

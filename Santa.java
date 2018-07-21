@@ -1,4 +1,7 @@
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -10,15 +13,17 @@ public class Santa implements Runnable {
 	public static final String MEET = "meeting in the study";
 	public static final String DELIVER = "delivering presents";
 
-	private final Semaphore door, invite, harness;
+	public static final String SNOW =
+        "\n\t\t*\t\t\t*\t\t*\n\n\t*\t\t\t*\t\t*\t\t*\n\n\t\t*\t\t*\t\t*\t\t*\n\n\t*\t\t*\t\t*\t\t*\n\n\t\t*\t\t*\n";
+
+	private final Semaphore door;
 	private final Queue<Elf> elves;
 	private final Queue<Reindeer> reindeer;
 	
-	public Santa(Semaphore door, Queue<Elf> elves, Queue<Reindeer> reindeer,
-			Semaphore invite, Semaphore harness) {
+	public Santa(Semaphore door, Queue<Elf> elves, Queue<Reindeer> reindeer) {
 		this.door = door;
-		this.elves = elves; this.reindeer = reindeer;
-		this.invite = invite; this.harness = harness;
+		this.elves = elves;
+        this.reindeer = reindeer;
 	}
 
 	@Override public String toString() { return "Santa"; }
@@ -31,50 +36,64 @@ public class Santa implements Runnable {
 		return reindeer.size() >= Xmas.MIN_REINDEER;
 	}
 
-	private boolean ready() {
-		return elvesReady() || reindeerReady();
+	private String sleepMessage() {
+		if (door.availablePermits() > 0) {
+			return "Hmm. Someone's already at the door.";
+		} else {
+			return this + " is sleeping. ZZzzz...";
+		}
 	}
 
 	@Override public void run() {
 		try {
 			while (true) {
-				if (door.availablePermits() > 0) {
-					System.out.println("Hmm. Someone's already at the door.");
-				} else {
-					System.out.println(this + " is sleeping. ZZzzz...");
-				}
+				System.out.println(sleepMessage());
 				door.acquire(); // sleep until someone knocks
+                System.out.println("Santa: \"Who's that knocking at my door??\"");
 				if (reindeerReady()) deliverPresents();
 				else if (elvesReady()) holdMeeting();
 			}
-		} catch (InterruptedException|BrokenBarrierException e) {
-			System.out.println(this + " " + e.getClass().getSimpleName());
-			Thread.currentThread().interrupt();
+		} catch (InterruptedException e) {
+            System.out.format("%s is done%n", this);
 		}
 	}
 
-	private void deliverPresents() throws InterruptedException, BrokenBarrierException {
-		process(reindeer, Xmas.MIN_REINDEER, DELIVER, harness);
+	private void deliverPresents() throws InterruptedException {
+		activityWithFriends(reindeer, Xmas.MIN_REINDEER, DELIVER);
 	}
 
-	private void holdMeeting() throws InterruptedException, BrokenBarrierException {
-		process(elves, Xmas.MIN_ELVES, MEET, invite);
+	private void holdMeeting() throws InterruptedException {
+		activityWithFriends(elves, Xmas.MIN_ELVES, MEET);
 	}
 
-	private void process(Queue<? extends Creature> queue,
-			int count, String action, Semaphore wait)
-				throws InterruptedException, BrokenBarrierException {
-		final List<Creature> list = new ArrayList<Creature>();
+    private String joinIds(List<Creature> coll, String separator) {
+        return coll.stream().mapToInt(Creature::getId).mapToObj(Integer::toString).collect(joining(separator));
+    }
+
+	private List<Creature> drainToSortedList(List<Creature> list,
+			Queue<? extends Creature> queue, int count) {
 		for (int i = 0; i < count; ++i) {
 			list.add(queue.remove());
-			wait.release(); // release them from waiting; Santa is ready for them
 		}
 		Collections.sort(list);
+		return list;
+	}
 
-		System.out.println(Util.join(list) + ", and " + this + " " + action);
+	private void activityWithFriends(Queue<? extends Creature> queue, int count, String act)
+            throws InterruptedException {
+		final List<Creature> list =
+			drainToSortedList(new ArrayList<Creature>(), queue, count);
+
+		// release them from waiting; Santa is ready for them
+		for (Creature c : list) { c.welcomeIn(); }
+
+        String type = list.get(0).getName();
+		String ids = joinIds(list, ", ");
+		System.out.printf("%s %s, and %s %s%n", type, ids, this, act);
+        if (list.size() == 9) System.out.println(SNOW);
 		Thread.sleep(5);
 
-		System.out.println("Ho! Ho! Ho! All finished!");
+		System.out.println("Santa: \"Good effort, everyone. Ho! Ho! Ho!\"");
 		// tell them to go back to whatever they were doing
 		for (Creature c : list) { c.grantLeave(); }
 	}
